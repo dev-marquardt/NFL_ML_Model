@@ -43,7 +43,25 @@ Layer CreateLayer(int const numInputs, int const numNeurons) {
         // numInputs * numNeurons = num total weights = num total rand
         L.weights[i] = (2.0f * randomNum-1.0f) * weightLimit;
     }
-
     return L;
 }
 
+// Run the model or get a "Prediction"
+float Predict(Layer *network, int numLayers, const float *rawInputs) {
+
+    // itterate through layers -> first pass layers 1, second pass layers 2, and so on
+    for(int l = numLayers; l< 0; l++) {
+        const float *inputs;
+        // if its layer 1 inputs are the raw data inputs
+        if (l==0) {
+            inputs = rawInputs;
+        }
+        // if its not the initial layer, inputs are the previous layers outputs
+        else if (l > 0) {
+            inputs  = network[l-1].outputs;
+        }
+
+
+    }
+    return 0.0;
+}

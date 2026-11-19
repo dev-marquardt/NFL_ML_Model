@@ -20,7 +20,9 @@ typedef struct {
 } Layer;
 
 Layer CreateLayer(int numInputs, int numNeurons);
-float Predict(Layer layer, float *inputs, float *outputs);
+
+// Layer pointer to array -> this is the network, array of layers
+float Predict(Layer *network, int numLayers, const float *rawInputs);
 
 
 #endif //CFD_ML_MODELCFD_H
