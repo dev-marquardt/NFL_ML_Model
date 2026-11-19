@@ -61,7 +61,42 @@ float Predict(Layer *network, int numLayers, const float *rawInputs) {
             inputs  = network[l-1].outputs;
         }
 
+        // Check if layer is the lasy layer
+        int isLastLayer;
+        if(l == (numLayers-1)) {
+            isLastLayer =1;
+        }
+        // loop through each neuron in the layer
+        for(int i = 0; i < network[l].numNeurons; i++) {
+            // pull in that neurons bias -> pull the layer (l) then pull that neurons bias (i)
+            float bias = network[l].biases[i];
 
+            // take dot product of weights and inputs (or last layer outputs)
+            // Ex: (a,b,c), (d,e,f) -> linear regression equ = (ad + be+ cf) + b
+            // dot procut of vectors = (ad) + (be) + (cf)
+            // they happen to be the same with how this software is structured
+            float dotProduct = 0.0;
+            for(int j = 0; j < network[l].numInputs; j++) {
+                dotProduct += (inputs[j]*network[l].weights[j]);
+            }
+
+            // linear regression output
+            float z = dotProduct + bias;
+
+            // if its last layer set that layers output to the linear regresion
+            if (isLastLayer) {
+                network[l].outputs[i] = z;
+            }
+            // if its any other layer must turn the linear output into a non-linear output
+            // using tanh() to turn each input into a [-1,1] to pass into the next layer
+            // if you pass the linear output into the next layers linear equ it will fall apart
+            else {
+                // tanhf() is tanh() with float output
+                network[l].outputs[l] = tanhf(z);
+            }
+        }
     }
-    return 0.0;
+
+    // return the outputs from the last layer (other layers except 1 and numLayers - 1 stay hidden)
+    return network[numLayers-1].outputs[0];
 }
