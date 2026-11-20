@@ -8,4 +8,6 @@ add_executable(CFD_ML main.c
         ModelCFD.c
         ModelCFD.c
         ModelCFD.c
-        ModelCFD.c)
+        ModelCFD.c
+        RawDataInput.h
+        RawDataInput.c)

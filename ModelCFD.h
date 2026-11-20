@@ -19,10 +19,16 @@ typedef struct {
     float *deltas;
 } Layer;
 
+// Function to create a layer of weights and neurons
 Layer CreateLayer(int numInputs, int numNeurons);
+
+// Function to clear up the memory used by the network
+int freeLayer(Layer *network, int numLayers);
 
 // Layer pointer to array -> this is the network, array of layers
 float Predict(Layer *network, int numLayers, const float *rawInputs);
 
+// Function to train the model
+void trainModel(Layer *network, int numLayers, const float *rawInputs, float target);
 
 #endif //CFD_ML_MODELCFD_H
