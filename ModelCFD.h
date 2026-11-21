@@ -29,6 +29,6 @@ int freeLayer(Layer *network, int numLayers);
 float Predict(Layer *network, int numLayers, const float *rawInputs);
 
 // Function to train the model
-void trainModel(Layer *network, int numLayers, const float *rawInputs, float target);
+void trainModel(Layer *network, int numLayers, const float *rawInputs, float target, float learningRate);
 
 #endif //CFD_ML_MODELCFD_H

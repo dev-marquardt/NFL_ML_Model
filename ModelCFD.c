@@ -124,7 +124,7 @@ float Predict(Layer *network, int numLayers, const float *rawInputs) {
 // training function runs a forward pass
 // then utilizes backwards propogation to nudge the weights
 // until getting loce to the target
-void trainModel(Layer *network, int numLayers, const float *rawInputs, float target) {
+void trainModel(Layer *network, int numLayers, const float *rawInputs, float target, float learningRate) {
 
     // 1) Run a forward pass or "prediction" to populate the inital Layers outputs
     float prediction = Predict(network, numLayers, rawInputs);
@@ -181,9 +181,14 @@ void trainModel(Layer *network, int numLayers, const float *rawInputs, float tar
         for (int i = 0; i < network[l].numNeurons; i++) {
             // Loop through layers inputs (Inputs * Neurons = numWeights)
             for (int j = 0; j < network[l].numInputs; j++) {
-                
+                // Chain Rule gradient -> (Neurons error) * (input that fed into it)
+                // Must subtract, moves the error in the opposite direction
+                // i * network[l].numInputs + j -> turns a 2D grid into a 1D input
+                network[l].weights[i * network[l].numInputs + j] -= learningRate * network[l].deltas[j] * inputs[j];
             }
+            // Adjust bias
+            // bias is just a weight with const input of 1.0 -> delta * 1.0
+            network[l].biases[i] -= learningRate * network[l].deltas[i];
         }
     }
-
 }
