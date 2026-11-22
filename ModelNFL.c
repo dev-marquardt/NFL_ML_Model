@@ -3,7 +3,7 @@
 //
 
 // include header file
-#include "ModelCFD.h"
+#include "ModelNFL.h"
 
 // c libs
 #include <stdlib.h>

@@ -4,10 +4,10 @@ project(CFD_ML C)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(CFD_ML main.c
-        ModelCFD.h
-        ModelCFD.c
-        ModelCFD.c
-        ModelCFD.c
-        ModelCFD.c
+        ModelNFL.h
+        ModelNFL.c
+        ModelNFL.c
+        ModelNFL.c
+        ModelNFL.c
         RawDataInput.h
         RawDataInput.c)
