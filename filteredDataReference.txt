@@ -1,0 +1,257 @@
+================================================================================
+NFL PLAY-BY-PLAY DATASET: COLUMN & FILTERING REFERENCE
+================================================================================
+
+1. DATASET FILTERING COLUMNS
+--------------------------------------------------------------------------------
+play
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0
+  - Null Behavior: No nulls on valid rows.
+  - Directive: Filter play == 1. Excludes timeouts, quarter breaks, non-plays.
+
+aborted_play
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0
+  - Null Behavior: 0.0 on normal plays.
+  - Directive: Filter aborted_play == 0. Removes botched snaps/handoffs.
+
+play_deleted
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0, null
+  - Null Behavior: Often null in older feeds; 1.0 if erased from official stats.
+  - Directive: Filter fill_null(0) == 0. (Do NOT use play_deleted == 0 directly).
+
+special_teams_play
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0, null
+  - Null Behavior: Null pre-2011.
+  - Directive: DROP THIS COLUMN. Redundant with 'special'.
+
+special
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0
+  - Null Behavior: 0.0 for scrimmage plays.
+  - Directive: Filter special == 0. Removes punts, kickoffs, field goals, XPs.
+
+qb_kneel
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0
+  - Null Behavior: 0.0 for normal plays.
+  - Directive: Filter qb_kneel == 0. Removes kneel-downs.
+
+qb_spike
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0
+  - Null Behavior: 0.0 for normal plays.
+  - Directive: Filter qb_spike == 0. Removes clock-stopping spikes.
+
+season_type
+  - Data Type: String
+  - Range / Values: "REG", "POST"
+  - Null Behavior: No nulls.
+  - Directive: Filter season_type == "REG". Standardizes incentives.
+
+
+2. CANDIDATE TARGET VARIABLES (Y)
+--------------------------------------------------------------------------------
+play_type
+  - Data Type: String
+  - Range / Values: "pass", "run", "punt", "field_goal", "kickoff", "no_play", null
+  - Null Behavior: Null on end-of-quarter/game rows; "no_play" on penalties.
+  - Usage: Filter play_type.is_in(["run", "pass"]). Target for play-call model.
+
+yards_gained
+  - Data Type: Float64
+  - Range / Values: ~ -40.0 to 99.0, null
+  - Null Behavior: Null on non-plays / aborted rows.
+  - Usage: Target for yardage regression models (apply Huber loss or clip outliers).
+
+first_down
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0, null
+  - Null Behavior: Null on special teams / non-scrimmage rows.
+  - Usage: Target for first-down conversion binary classification.
+
+success
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0, null
+  - Null Behavior: Null on non-plays.
+  - Usage: Target for play efficiency binary classification (EPA > 0).
+
+
+3. PRE-SNAP CORE INPUT FEATURES (X)
+--------------------------------------------------------------------------------
+yardline_100
+  - Data Type: Float64
+  - Range / Values: 1.0 to 99.0
+  - Null Behavior: Null on kickoffs/timeouts.
+  - Note: Distance to opponent end zone (1 = 1 yard to goal line).
+
+down
+  - Data Type: Float64
+  - Range / Values: 1.0, 2.0, 3.0, 4.0, null
+  - Null Behavior: Null on non-scrimmage plays. Filter down.is_not_null().
+  - Note: Convert to 1-hot encodings (is_1st, is_2nd, is_3rd, is_4th) for C MLP.
+
+ydstogo
+  - Data Type: Float64
+  - Range / Values: 0.0 to ~50.0
+  - Null Behavior: 0 on non-plays.
+  - Note: Distance needed for a new set of downs.
+
+goal_to_go
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0
+  - Null Behavior: Null on non-scrimmage plays.
+  - Note: 1.0 if target line is the goal line (yardline_100 == ydstogo).
+
+qtr
+  - Data Type: Float64
+  - Range / Values: 1.0 to 5.0 (rarely 6.0)
+  - Null Behavior: No nulls on valid plays.
+  - Note: Filter qtr <= 4 to exclude overtime noise.
+
+quarter_seconds_remaining
+  - Data Type: Float64
+  - Range / Values: 0.0 to 900.0
+  - Null Behavior: Null on non-plays.
+  - Note: Seconds left in current quarter (15 min = 900s).
+
+half_seconds_remaining
+  - Data Type: Float64
+  - Range / Values: 0.0 to 1800.0
+  - Null Behavior: Null on non-plays.
+  - Note: Crucial for modeling 2-minute drills at end of Q2 and Q4.
+
+game_seconds_remaining
+  - Data Type: Float64
+  - Range / Values: 0.0 to 3600.0
+  - Null Behavior: Null on non-plays.
+  - Note: Total game time remaining in regulation.
+
+score_differential
+  - Data Type: Float64
+  - Range / Values: ~ -60.0 to +60.0
+  - Null Behavior: Null on non-plays.
+  - Note: posteam_score - defteam_score BEFORE the snap.
+
+posteam_timeouts_remaining
+  - Data Type: Float64
+  - Range / Values: 0.0 to 3.0
+  - Null Behavior: Null on non-plays.
+  - Note: Offense timeouts remaining in current half.
+
+defteam_timeouts_remaining
+  - Data Type: Float64
+  - Range / Values: 0.0 to 3.0
+  - Null Behavior: Null on non-plays.
+  - Note: Defense timeouts remaining in current half.
+
+
+4. NICE-TO-HAVE: GAME CONTEXT
+--------------------------------------------------------------------------------
+posteam_type
+  - Data Type: String
+  - Range / Values: "home", "away", null
+  - Null Behavior: Null on non-possession rows.
+  - Note: Encode to binary (1.0 = home, 0.0 = away).
+
+div_game
+  - Data Type: Int32
+  - Range / Values: 0, 1
+  - Null Behavior: No nulls.
+  - Note: 1 if divisional match.
+
+season
+  - Data Type: Int32
+  - Range / Values: 1999 to 2026
+  - Null Behavior: No nulls.
+  - Note: Used for temporal train/val/test splits and exponential time weighting.
+
+week
+  - Data Type: Int32
+  - Range / Values: 1 to 22
+  - Null Behavior: No nulls.
+  - Note: Week of the season (1-18 regular season).
+
+
+5. NICE-TO-HAVE: PRE-SNAP ALIGNMENT
+--------------------------------------------------------------------------------
+shotgun
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0
+  - Null Behavior: Sparse / mostly 0 in pre-2006 data.
+  - Note: Great for predicting yardage/success; drop if predicting play-call choice.
+
+no_huddle
+  - Data Type: Float64
+  - Range / Values: 0.0, 1.0
+  - Null Behavior: Sparse in pre-2006 data.
+  - Note: 1.0 if offense ran hurry-up.
+
+play_clock
+  - Data Type: String
+  - Range / Values: "0" to "40", null
+  - Null Behavior: High null rate in older seasons.
+  - Note: Drop for v1 baseline (stored as string).
+
+
+6. NICE-TO-HAVE: MARKET LINES
+--------------------------------------------------------------------------------
+spread_line
+  - Data Type: Float64
+  - Range / Values: ~ -27.0 to +27.0
+  - Null Behavior: Extremely rare nulls.
+  - Note: Home perspective in nflverse (+3.5 = Home favored by 3.5).
+  - Derived Feature: Flip sign for away team ->
+    posteam_spread = spread_line if posteam_type == 'home' else -spread_line
+
+total_line
+  - Data Type: Float64
+  - Range / Values: ~ 30.0 to 65.0
+  - Null Behavior: Extremely rare nulls.
+  - Note: Game over/under total score expectation.
+
+
+7. NICE-TO-HAVE: ENVIRONMENT
+--------------------------------------------------------------------------------
+roof
+  - Data Type: String
+  - Range / Values: "outdoors", "dome", "closed", "open", null
+  - Null Behavior: Collapse to binary: is_indoors = 1 if roof in ["dome", "closed"] else 0.
+
+surface
+  - Data Type: String
+  - Range / Values: "grass", "fieldturf", "astroturf", etc., null/empty string
+  - Null Behavior: Collapse to binary: is_grass = 1 if surface == "grass" else 0.
+
+temp
+  - Data Type: Int32
+  - Range / Values: ~ -10 to 110 (°F), null
+  - Null Behavior: Null for dome games.
+  - Imputation: Fill indoor nulls with 70, outdoor nulls with median (~60).
+
+wind
+  - Data Type: Int32
+  - Range / Values: 0 to ~50 (mph), null
+  - Null Behavior: Null for dome games.
+  - Imputation: Fill indoor nulls with 0, outdoor nulls with median (~7).
+
+
+================================================================================
+POLARS SAFE FILTERING SNIPPET
+================================================================================
+clean = df.filter(
+    (pl.col("play") == 1)
+    & (pl.col("aborted_play") == 0)
+    & (pl.col("play_deleted").fill_null(0) == 0)
+    & (pl.col("special") == 0)
+    & (pl.col("qb_kneel") == 0)
+    & (pl.col("qb_spike") == 0)
+    & (pl.col("season_type") == "REG")
+    & (pl.col("play_type").is_in(["run", "pass"]))
+    & (pl.col("down").is_not_null())
+    & (pl.col("qtr") <= 4)
+)
+================================================================================

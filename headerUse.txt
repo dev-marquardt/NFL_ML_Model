@@ -1,0 +1,50 @@
+
+# Dataset filtering
+play: Float64
+aborted_play: Float64
+play_deleted: Float64
+special_teams_play: Float64
+special: Float64
+qb_kneel: Float64
+qb_spike: Float64
+season_type: String
+
+# Candidate Target Variables
+play_type: String
+yards_gained: Float64
+first_down: Float64
+success: Float64
+
+# Pre-snap
+yardline_100: Float64
+down: Float64
+ydstogo: Float64
+goal_to_go: Float64
+qtr: Float64
+quarter_seconds_remaining: Float64
+half_seconds_remaining: Float64
+game_seconds_remaining: Float64
+score_differential: Float64
+posteam_timeouts_remaining: Float64
+defteam_timeouts_remaining: Float64
+
+# Nice to have: Game context
+posteam_type: String
+div_game: Int32
+season: Int32
+week: Int32
+
+# Nice to have: Pre-Snap
+shotgun: Float64
+no_huddle: Float64
+play_clock: String
+
+# Nice to have: Market Lines
+spread_line: Float64
+total_line: Float64
+
+# Nice to have: Enviorment
+roof: String
+surface: String
+temp: Int32
+wind: Int32
