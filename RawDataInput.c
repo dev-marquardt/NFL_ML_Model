@@ -3,6 +3,8 @@
 //
 
 #include "RawDataInput.h"
+#include "mathFunctions.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -83,3 +85,29 @@ Dataset loadData(const char *inputFilePath, const char *targetFilePath) {
 
     return data;
 }
+
+void normalizeData(Dataset dataset) {
+    float *zScoreData[dataset.numCols];
+    float zScoreTarget = 0.0f;
+
+    float *rawData = dataset.rawPBPData;
+    float *rawTarget = dataset.rawTargetData;
+
+    float *data = malloc(dataset.numRows * sizeof(float));
+
+    for (int c = 0; c < dataset.numCols; c++) {
+        for (int r = 0; r < dataset.numRows; r++) {
+            data[r] = rawData[r * dataset.numCols + c];
+        }
+        float average = mean(data, dataset.numRows);
+        float standardDev = stdev(data, average, dataset.numRows);
+
+        for (int r = 0; r < dataset.numRows; r++) {
+            rawData[r * dataset.numCols + c] = zScore(rawData[r * dataset.numCols + c], average, standardDev);
+        }
+    }
+
+    free(data);
+}
+
+

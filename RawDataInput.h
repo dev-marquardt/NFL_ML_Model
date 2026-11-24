@@ -12,9 +12,11 @@ typedef struct {
     int numCols;
 } Dataset;
 
+void freeDataset(Dataset *dataset);
+
 // set function for dataset loading
 Dataset loadData(const char *inputFilePath, const char *targetFilePath);
 
-void freeDataset(Dataset *dataset);
+void normalizeData(Dataset dataset);
 
 #endif //CFD_ML_RAWDATAINPUT_H

@@ -1,0 +1,13 @@
+Raw Data: ../PythonScripts_DataClean/pbp.csv
+
+Test Data: ../PythonScripts_DataClean/testInput.csv
+
+Test Target: ../PythonScripts_DataClean/testTarget.csv
+
+Train Data: ../PythonScripts_DataClean/trainInput.csv
+
+Train Target: ../PythonScripts_DataClean/trainTarget.csv
+
+Validation Input: ../PythonScripts_DataClean/valInput.csv
+
+Validation Target: ../PythonScripts_DataClean/valTarget.csv

@@ -84,9 +84,19 @@ clean = clean.select(pl.all().cast(pl.Float32))
 clean = clean.collect()
 
 # Step 7: Split into matched input and target files (row i in both = same play)
-inputs = clean.drop(targetCols)
-targets = clean.select("success")
+# Step 7: Split by season into Train (<=2022), Recent/Val (2023-2025), and Test (2026)
+train = clean.filter(pl.col("season") <= 2022)
+val   = clean.filter((pl.col("season") >= 2023) & (pl.col("season") <= 2025))
+test  = clean.filter(pl.col("season") == 2026)
 
-print("Inputs:", inputs.shape, "| Targets:", targets.shape)
-inputs.write_csv("pbpCleanInput.csv")
-targets.write_csv("pbpCleanTarget.csv")
+# Save Train
+train.drop(targetCols).write_csv("trainInput.csv")
+train.select("success").write_csv("trainTarget.csv")
+
+# Save 2023-2025 (Validation / Fine-tune)
+val.drop(targetCols).write_csv("valInput.csv")
+val.select("success").write_csv("valTarget.csv")
+
+# Save 2026 (Test)
+test.drop(targetCols).write_csv("testInput.csv")
+test.select("success").write_csv("testTarget.csv")

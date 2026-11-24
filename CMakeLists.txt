@@ -10,4 +10,6 @@ add_executable(CFD_ML main.c
         ModelNFL.c
         ModelNFL.c
         RawDataInput.h
-        RawDataInput.c)
+        RawDataInput.c
+        mathFunctions.h
+        mathFunctions.c)
