@@ -18,6 +18,10 @@ Layer CreateLayer(int const numInputs, int const numNeurons) {
     L.numInputs = numInputs;
     L.numNeurons = numNeurons;
 
+    // Seed the random var at begining of function so doesnt get looped over and screwed up
+    // possible to loop over it more than once a milisecond to cause the same num
+    srand(time(NULL));
+
     // Set size of the data for each
     L.weights = calloc((L.numInputs * L.numNeurons), sizeof(float));
     L.biases = calloc(numNeurons, sizeof(float));
@@ -33,7 +37,6 @@ Layer CreateLayer(int const numInputs, int const numNeurons) {
     float const weightLimit = sqrtf(x);
 
     // itterate over every weight -> every input in every neuron has a weight
-    srand(time(NULL)>>1);
     for(int i = 0; i < (numInputs*numNeurons); i++) {
         // gen randomNum -> use seed of Current time bit shifted by 1 left to get better random results
         // random float [0,1]
@@ -69,7 +72,7 @@ int freeLayer(Layer *network, int numLayers) {
 // Run the model or get a "Prediction"
 float Predict(Layer *network, int numLayers, const float *rawInputs) {
     // itterate through layers -> first pass layers 1, second pass layers 2, and so on
-    for(int l = numLayers; l< 0; l++) {
+    for(int l = 0; l < numLayers; l++) {
         const float *inputs;
         // if its layer 1 inputs are the raw data inputs
         if (l==0) {
