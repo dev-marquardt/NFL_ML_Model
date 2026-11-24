@@ -14,13 +14,17 @@
 // key idea in ML model is layers and how the numbers are passed from layer to layer
 Layer CreateLayer(int const numInputs, int const numNeurons) {
     // initialize
+    static int isSeeded = 0;
+    if (isSeeded == 0) {
+        // Seed the random var at begining of function so doesnt get looped over and screwed up
+        // possible to loop over it more than once a milisecond to cause the same num
+        srand(time(NULL));
+        isSeeded = 1;
+    }
+
     Layer L;
     L.numInputs = numInputs;
     L.numNeurons = numNeurons;
-
-    // Seed the random var at begining of function so doesnt get looped over and screwed up
-    // possible to loop over it more than once a milisecond to cause the same num
-    srand(time(NULL));
 
     // Set size of the data for each
     L.weights = calloc((L.numInputs * L.numNeurons), sizeof(float));
@@ -33,7 +37,7 @@ Layer CreateLayer(int const numInputs, int const numNeurons) {
     // Uniform: x = sqrt(6/(inputs+Neurons)) | Normal: stdev = sqrt(2/(inputs + neurons))
 
     // Creating limits to generate for the weights, [-limit, limit] -> WeightLimit = limit
-    float const x = (6.0/(L.numInputs + L.numNeurons));
+    float const x = (6.0f/(float)(L.numInputs + L.numNeurons));
     float const weightLimit = sqrtf(x);
 
     // itterate over every weight -> every input in every neuron has a weight
@@ -84,9 +88,9 @@ float Predict(Layer *network, int numLayers, const float *rawInputs) {
         }
 
         // Check if layer is the lasy layer
-        int isLastLayer;
+        int isLastLayer = 0;
         if(l == (numLayers-1)) {
-            isLastLayer =1;
+            isLastLayer = 1;
         }
         // loop through each neuron in the layer
         for(int i = 0; i < network[l].numNeurons; i++) {
@@ -99,7 +103,7 @@ float Predict(Layer *network, int numLayers, const float *rawInputs) {
             // they happen to be the same with how this software is structured
             float dotProduct = 0.0;
             for(int j = 0; j < network[l].numInputs; j++) {
-                dotProduct += (inputs[j]*network[l].weights[j]);
+                dotProduct += (inputs[j]*network[l].weights[i * network[l].numInputs + j]);
             }
 
             // linear regression output
@@ -114,7 +118,7 @@ float Predict(Layer *network, int numLayers, const float *rawInputs) {
             // if you pass the linear output into the next layers linear equ it will fall apart
             else {
                 // tanhf() is tanh() with float output
-                network[l].outputs[l] = tanhf(z);
+                network[l].outputs[i] = tanhf(z);
             }
         }
     }
@@ -163,7 +167,7 @@ void trainModel(Layer *network, int numLayers, const float *rawInputs, float tar
                 // when working back, you have the neurons output hidden by tanh
                 // do run that through the derivitive to get slope and then mult by error to get the inherited error
                 float a = network[l].outputs[j];
-                network[l].deltas[j] = sumError * (a * a);
+                network[l].deltas[j] = sumError * (1.0f - (a * a));
             }
         }// end else
     } // end layer loop
@@ -187,7 +191,7 @@ void trainModel(Layer *network, int numLayers, const float *rawInputs, float tar
                 // Chain Rule gradient -> (Neurons error) * (input that fed into it)
                 // Must subtract, moves the error in the opposite direction
                 // i * network[l].numInputs + j -> turns a 2D grid into a 1D input
-                network[l].weights[i * network[l].numInputs + j] -= learningRate * network[l].deltas[j] * inputs[j];
+                network[l].weights[i * network[l].numInputs + j] -= learningRate * network[l].deltas[i] * inputs[j];
             }
             // Adjust bias
             // bias is just a weight with const input of 1.0 -> delta * 1.0

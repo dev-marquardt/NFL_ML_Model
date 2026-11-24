@@ -1,13 +1,17 @@
 #include "ModelNFL.h"
+#include "RawDataInput.h"
 
 #include <stdio.h>
 
 int main(void) {
-    Layer l = CreateLayer(5, 5);
 
-    for(int i = 0; i < 25; i++) {
-        printf("\n%f ", l.weights[i]);
-    }
+    // 1) Load clean data from CSV file (refer to python scripts)
+    const char *inputPath = "../PythonScripts_DataClean/pbpCleanInput.csv";
+    const char *targetPath = "../PythonScripts_DataClean/pbpCleanTarget.csv";
+
+    printf("Loading Dataset\n\n");
+    Dataset data = loadData(inputPath, targetPath);
+    printf("Rows: %d | Cols: %d",data.numRows, data.numCols);
 
     return 0;
 }

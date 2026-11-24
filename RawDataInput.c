@@ -21,11 +21,11 @@ Dataset loadData(const char *inputFilePath, const char *targetFilePath) {
     FILE *inputFile = fopen(inputFilePath, "r");
     FILE *targetFile = fopen(targetFilePath, "r");
 
-    int currChar;
+    int currChar = 0;
     int numInputColunms = 1; // Start at 1 becasue it counts commas. Last element doesnt have an ending comma
     // loop through first line of data file and count the num of , to determine num inputs
     // Basically counts the number of columns
-    while ((currChar = fgetc(inputFile)) != EOF && currChar != '\n') {
+    while ((currChar = fgetc(inputFile)) != EOF && currChar != 0x0A) {
         // 0x2C binary code for ','
         if (currChar == 0x2C) {
             numInputColunms++;
@@ -38,7 +38,7 @@ Dataset loadData(const char *inputFilePath, const char *targetFilePath) {
     currChar = 0; // reset the currChar data point
     while ((currChar = fgetc(inputFile)) != EOF) {
         // if currChar is \n (End of line) and the prev char was not end of line, add a row
-        if (currChar == 0x0A && prevCharr != 0x0D) {
+        if (currChar == 0x0A && prevCharr != 0x0A) {
             numInputRows++;
         }
         // save current char as prev for next run
@@ -49,7 +49,7 @@ Dataset loadData(const char *inputFilePath, const char *targetFilePath) {
         numInputRows++;
     }
 
-    // Set memory foot-print
+    // Set memory foot-print for dataset struct
     int totalInputs = numInputColunms * numInputRows;
 
     data.numRows = numInputRows;
@@ -58,7 +58,7 @@ Dataset loadData(const char *inputFilePath, const char *targetFilePath) {
     data.rawTargetData = calloc(numInputRows, sizeof(float));
 
     // Rewind sets cursor back to the begining of the file
-    rewind(inputFile);
+    rewind(inputFile); // -> optimized way to do this check "Effective C" book
     currChar = 0;
 
     while ((currChar = fgetc(inputFile)) != EOF && currChar != 0x0A) {} // Skip headers for the data file
