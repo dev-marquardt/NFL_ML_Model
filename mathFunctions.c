@@ -31,6 +31,10 @@ float stdev(float *data, float mean, int length) {
 }
 
 float zScore(float x, float mean, float stdev) {
+    if (stdev == 0.0f) {
+        return 0.0f;
+    }
+
     float z = 0.0f;
 
     z = (x - mean) / stdev;

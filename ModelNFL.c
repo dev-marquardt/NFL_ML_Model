@@ -12,7 +12,7 @@
 
 // Set up create layer function that will generate the Struct for layers
 // key idea in ML model is layers and how the numbers are passed from layer to layer
-Layer CreateLayer(int const numInputs, int const numNeurons) {
+Layer createLayer(int const numInputs, int const numNeurons) {
     // initialize
     static int isSeeded = 0;
     if (isSeeded == 0) {

@@ -20,7 +20,7 @@ typedef struct {
 } Layer;
 
 // Function to create a layer of weights and neurons
-Layer CreateLayer(int numInputs, int numNeurons);
+Layer createLayer(int numInputs, int numNeurons);
 
 // Function to clear up the memory used by the network
 int freeLayer(Layer *network, int numLayers);

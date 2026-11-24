@@ -16,19 +16,123 @@ int main(void) {
     const char *valTargetPath = "../PythonScripts_DataClean/valTarget.csv";
 
     printf("Loading Dataset\n\n");
+    // set up datasets for injection into model
     Dataset trainData = loadData(trainInputPath, trainTargetPath);
     Dataset testData = loadData(testInputPath, testTargetPath);
     Dataset valData = loadData(valInputPath, valTargetPath);
 
-    printf("\nTraining Data: Rows: %d | Cols: %d",trainData.numRows, trainData.numCols);
-    printf("\nTest Data: Rows: %d | Cols: %d",testData.numRows, testData.numCols);
-    printf("\nValidation Data: Rows: %d | Cols: %d",valData.numRows, valData.numCols);
+    // normolize the datasets
+    normalizeData(trainData);
+    normalizeData(valData);
+    normalizeData(testData);
+
+    printf("\nTraining Data: Rows: %d | Cols: %d\n",trainData.numRows, trainData.numCols);
+    printf("\nTest Data: Rows: %d | Cols: %d\n",testData.numRows, testData.numCols);
+    printf("\nValidation Data: Rows: %d | Cols: %d\n",valData.numRows, valData.numCols);
 
     // Building the Neural network
-    int numLayers = 3;
+    const int numLayers = 3;
+    Layer net[3];
+    net[0] = createLayer(trainData.numCols, 64);
+    net[1] = createLayer(64, 32);
+    net[2] = createLayer(32, 1);
+
+    // Training the network
+    const int numEpochs = 3;
+    const float learningRate = 0.001f;
+
+    printf("\n\n\n Training Model on Data up to 2023\n\n\n");
+
+    // each epoch is one full run over the training data
+    // increase in epoch -> decrease in learning rate
+    for (int epoch = 0; epoch < numEpochs; epoch++) {
+        double trainErrSqu = 0.0;
+
+
+        // train model on data
+        for (int r = 0; r < trainData.numRows; r++) {
+            const float *playInputs = &trainData.rawPBPData[r * trainData.numCols];
+            const float target = trainData.rawTargetData[r];
+
+            // function to train the model
+            trainModel(net, numLayers, playInputs, target, learningRate);
+
+            // find diff of output to target
+            float difference = net[numLayers - 1].outputs[0] - target;// takes different from output to actual
+            trainErrSqu += (double)(difference * difference);
+        }
+
+        // calc MSE for the base training cycle
+        double trainMSE = trainErrSqu / (double)trainData.numRows;
+        printf("\nTraining: Epoch: %d | Train MSE: %.5f\n", epoch, trainMSE);
+    }
+
+    // Fine tuning on modern plays (2023-2025)
+    const int tuneEpochs = 2;
+    const float tuneLearningRate = 0.0002f;
+
+    // run on a smaller learning rate (model already learend from hte base training on mass data)
+    for (int i = 0; i < tuneEpochs; i++) {
+        double valErrSqu = 0.0;
+
+        // inject the tuning data
+        for (int r = 0; r < valData.numRows; r++) {
+            const float *playInputs = &valData.rawPBPData[r * valData.numCols];
+            const float target = valData.rawTargetData[r];
+
+            // train model on tuning data -> Should be able to push data from
+            // 2022 NFL closer to 2025/2026 style of play
+            trainModel(net, numLayers, playInputs, target, tuneLearningRate);
+
+            // find diff of output to target
+            float diff = net[numLayers - 1].outputs[0] - target;
+            valErrSqu += (double)(diff * diff);
+        }
+
+        // calc MSE for the validation training cycle
+        double valMSE = valErrSqu / (double)valData.numRows;
+        printf("\nFine-Tune: Epoch: %d | Train MSE: %.5f\n", i, valMSE);
+    }
+
+    // Test Model -> Test data loaded and is from 2026 (this curr year)
+    double testErrSqu = 0.0;
+    int correctTestRuns = 0;
+
+    // loop through rows in the test data (how many input cycsles there is)
+    for (int r = 0; r < testData.numRows; r++) {
+        // format the inputs to predict with the model
+        const float *testInputs = &testData.rawPBPData[r * testData.numCols];
+        const float testTarget = testData.rawTargetData[r];
+
+        float prediction = Predict(net, numLayers, testInputs);
+
+        // calculate the difference from the predicrtion
+        float diff = prediction - testTarget;
+        testErrSqu += (double)(diff * diff);
+
+
+        // model output is a flaot, need to get that into binary which is
+        // what the sucess var is in dataset
+        int predClass = 0;
+        if (prediction >= 0.5f) {
+            predClass = 1;
+        }
+        if (predClass == (int)testTarget) {
+            correctTestRuns++;
+        }
+    }
+
+    // get the MSE for the test runs
+        double testMSE = testErrSqu / (double)testData.numRows;
+
+        // get the test accuracy
+        double testAcc = ((double)correctTestRuns / (double)testData.numRows) * 100.0;
+
+        printf("\n2026 Test | MSE: %.5f | Accuracy: %.2f%%\n", testMSE, testAcc);
 
 
     // Clean
+    freeLayer(net, numLayers);
     freeDataset(&trainData);
     freeDataset(&testData);
     freeDataset(&valData);
