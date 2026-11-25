@@ -12,11 +12,23 @@ typedef struct {
     int numCols;
 } Dataset;
 
+typedef struct {
+    int numDataCols;
+    int numRows;
+    float *trainingMean;
+    float *trainingStdev;
+    float targetMean;
+    float targetStdev;
+} NormilizationFit;
+
 void freeDataset(Dataset *dataset);
+void freeNormilizationFit(NormilizationFit *normFit);
 
 // set function for dataset loading
 Dataset loadData(const char *inputFilePath, const char *targetFilePath);
 
-void normalizeData(Dataset dataset);
+NormilizationFit normalizeFit(Dataset *trainingDataset, Dataset *valDataset);
+
+void applyNormalization(Dataset *data, NormilizationFit *normFit);
 
 #endif //CFD_ML_RAWDATAINPUT_H

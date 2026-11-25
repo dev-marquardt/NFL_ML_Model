@@ -2,12 +2,12 @@
 <module version="4">
   <component name="FacetManager">
     <facet type="Python" name="Python facet">
-      <configuration sdkName="~/CLionProjects/NFL_ML_Model/.venv" />
+      <configuration sdkName="~\CLionProjects\NFL_ML_Model\.venv" />
     </facet>
   </component>
   <component name="NewModuleRootManager">
-    <orderEntry type="jdk" jdkName="~/CLionProjects/NFL_ML_Model/.venv" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="~\CLionProjects\NFL_ML_Model\.venv" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="~/CLionProjects/NFL_ML_Model/.venv interpreter library" level="application" />
+    <orderEntry type="library" name="~\CLionProjects\NFL_ML_Model\.venv interpreter library" level="application" />
   </component>
 </module>

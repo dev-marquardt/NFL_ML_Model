@@ -22,9 +22,10 @@ int main(void) {
     Dataset valData = loadData(valInputPath, valTargetPath);
 
     // normolize the datasets
-    normalizeData(trainData);
-    normalizeData(valData);
-    normalizeData(testData);
+    NormilizationFit normFit = normalizeFit(&trainData, &valData);
+    applyNormalization(&trainData, &normFit);
+    applyNormalization(&valData, &normFit);
+    applyNormalization(&testData, &normFit);
 
     printf("\nTraining Data: Rows: %d | Cols: %d\n",trainData.numRows, trainData.numCols);
     printf("\nTest Data: Rows: %d | Cols: %d\n",testData.numRows, testData.numCols);
@@ -130,12 +131,12 @@ int main(void) {
 
         printf("\n2026 Test | MSE: %.5f | Accuracy: %.2f%%\n", testMSE, testAcc);
 
-
     // Clean
     freeLayer(net, numLayers);
     freeDataset(&trainData);
     freeDataset(&testData);
     freeDataset(&valData);
+    freeNormilizationFit(&normFit);
 
     return 0;
 }

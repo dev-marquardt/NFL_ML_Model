@@ -17,6 +17,18 @@ void freeDataset(Dataset *dataset) {
     (*dataset).numCols = 0;
 }
 
+void freeNormilizationFit(NormilizationFit *normFit) {
+    free((*normFit).trainingMean);
+    free((*normFit).trainingStdev);
+    (*normFit).trainingMean = NULL;
+    (*normFit).trainingStdev = NULL;
+
+    (*normFit).numDataCols = 0;
+    (*normFit).numRows = 0;
+    (*normFit).targetMean = 0.0f;
+    (*normFit).targetStdev = 0.0f;
+}
+
 Dataset loadData(const char *inputFilePath, const char *targetFilePath) {
     Dataset data;
 
@@ -86,28 +98,80 @@ Dataset loadData(const char *inputFilePath, const char *targetFilePath) {
     return data;
 }
 
-void normalizeData(Dataset dataset) {
-    float *zScoreData[dataset.numCols];
-    float zScoreTarget = 0.0f;
+NormilizationFit normalizeFit(Dataset *trainingDataset, Dataset *valDataset) {
+    NormilizationFit fit;
+    fit.numDataCols = (*trainingDataset).numCols;
+    fit.numRows = (*trainingDataset).numRows + (*valDataset).numRows;
 
-    float *rawData = dataset.rawPBPData;
-    float *rawTarget = dataset.rawTargetData;
+    fit.trainingMean = calloc(fit.numDataCols, sizeof(float));
+    fit.trainingStdev = calloc(fit.numDataCols, sizeof(float));
 
-    float *data = malloc(dataset.numRows * sizeof(float));
+    float *allData = calloc(fit.numRows * fit.numDataCols, sizeof(float));
+    float *allTarget = calloc(fit.numRows, sizeof(float));
+    float *dataCol = malloc(fit.numRows * sizeof(float));
 
-    for (int c = 0; c < dataset.numCols; c++) {
-        for (int r = 0; r < dataset.numRows; r++) {
-            data[r] = rawData[r * dataset.numCols + c];
+    float *rawTrainingData = (*trainingDataset).rawPBPData;
+    float *rawTrainingTarget = (*trainingDataset).rawTargetData;
+
+    float *rawTestData = (*valDataset).rawPBPData;
+    float *rawTestTarget = (*valDataset).rawTargetData;
+
+    // merging data arrs to have 1 data arr to then get
+    //stastical numbers from
+    int arr1 = (*trainingDataset).numRows * fit.numDataCols;
+    int arr2 = (*valDataset).numRows * fit.numDataCols;
+
+    for (int i = 0; i < arr1; i++) {
+        allData[i] = rawTrainingData[i];
+    }
+    for (int i = 0; i < arr2; i++) {
+        allData[arr1 + i] = rawTestData[i];
+    }
+
+    // merging target arrs to have 1 target arr to then get
+    //stastical numbers from
+    arr1 = (*trainingDataset).numRows;
+    arr2 = (*valDataset).numRows;
+
+    for (int i = 0; i < arr1; i++) {
+        allTarget[i] = rawTrainingTarget[i];
+    }
+    for (int i = 0; i < arr2; i++) {
+        allTarget[arr1 + i] = rawTestTarget[i];
+    }
+
+    for (int c = 0; c < fit.numDataCols; c++) {
+        for (int r = 0; r < fit.numRows; r++) {
+            dataCol[r] = allData[r * fit.numDataCols + c];
         }
-        float average = mean(data, dataset.numRows);
-        float standardDev = stdev(data, average, dataset.numRows);
 
-        for (int r = 0; r < dataset.numRows; r++) {
-            rawData[r * dataset.numCols + c] = zScore(rawData[r * dataset.numCols + c], average, standardDev);
+        float average = mean(dataCol, fit.numRows);
+        float standardDev = stdev(dataCol, average, fit.numRows);
+
+        fit.trainingMean[c] = average;
+        fit.trainingStdev[c] = standardDev;
+    }
+
+    fit.targetMean = mean(allTarget, fit.numRows);
+    fit.targetStdev = stdev(allTarget, fit.targetMean, fit.numRows);
+
+    free(allData);
+    free(dataCol);
+    free(allTarget);
+
+    return fit;
+}
+
+void applyNormalization(Dataset *data, NormilizationFit *normFit) {
+    for (int c = 0; c < (*data).numCols; c++) {
+        for (int r = 0; r < (*data).numRows; r++) {
+            (*data).rawPBPData[r * (*normFit).numDataCols + c] = zScore((*data).rawPBPData[r * (*normFit).numDataCols + c], (*normFit).trainingMean[c], (*normFit).trainingStdev[c]);
         }
     }
 
-    free(data);
+    for (int r = 0; r < (*data).numCols; r++) {
+        (*data).rawTargetData[r] = zScore((*data).rawTargetData[r], (*normFit).targetMean, (*normFit).targetStdev);
+    }
 }
 
 
