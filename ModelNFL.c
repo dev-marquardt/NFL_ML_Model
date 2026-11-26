@@ -230,3 +230,50 @@ void trainNetwork(Layer *network, int numLayers, int numEpochs, Dataset *data, c
         printf("\nEpoch: %d | Train MSE: %.5f\n", epoch, trainMSE);
     }
 }
+
+void benchmarkNetwork(Layer *network, int numLayers, Dataset *data, NormilizationFit *normFit) {
+    double testErrSqu = 0.0;
+    int correctTestRuns = 0;
+
+    for (int r = 0; r < (*data).numRows; r++) {
+        // format the inputs to predict with the model
+        const float *testInputs = &(*data).rawPBPData[r * (*data).numCols];
+        const float testTarget = (*data).rawTargetData[r];
+
+        float prediction = Predict(network, numLayers, testInputs);
+
+        // unNormalize the results
+
+        float unNormalizePrediction = unNormalize(prediction, (*normFit).targetMean, (*normFit).targetStdev);
+        float unNormalizeTarget = unNormalize(testTarget, (*normFit).targetMean, (*normFit).targetStdev);
+
+        // calculate the difference from the predicrtion
+        float delatTarget = unNormalizePrediction - unNormalizeTarget;
+        testErrSqu += (double)(delatTarget * delatTarget);
+
+
+        // model prediction and target are a floats, need to convery to binary
+        int predictionBinary = 0;
+        if (unNormalizePrediction >= 0.5f) {
+            predictionBinary = 1;
+        }
+        int targetBinary = 0;
+        if (unNormalizeTarget >= 0.5f) {
+            targetBinary = 1;
+        }
+
+        // check if the binary prediction vs target are the same
+        // if so add one to correct test runs to get some accuracy ratings
+        if (predictionBinary == targetBinary) {
+            correctTestRuns++;
+        }
+    }
+
+    // get the MSE for the test runs
+    double testMSE = testErrSqu / (double)(*data).numRows;
+
+    // get the test accuracy
+    double testAcc = ((double)correctTestRuns / (double)(*data).numRows) * 100.0;
+
+    printf("\n2026 Test | MSE: %.5f | Accuracy: %.2f%%\n", testMSE, testAcc);
+}

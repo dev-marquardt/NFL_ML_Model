@@ -36,4 +36,7 @@ void trainModel(Layer *network, int numLayers, const float *rawInputs, float tar
 // function to train the network
 void trainNetwork(Layer *network, int numLayers, int numEpochs, Dataset *data, float learningRate);
 
+//
+void benchmarkNetwork(Layer *network, int numLayers, Dataset *data, NormilizationFit *normFit);
+
 #endif //CFD_ML_MODELCFD_H

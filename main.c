@@ -27,11 +27,13 @@ int main(void) {
     applyNormalization(&valData, &normFit);
     applyNormalization(&testData, &normFit);
 
+    // Validate that the data was imported correctly -> problem with data breaks the model
     printf("\nTraining Data: Rows: %d | Cols: %d\n",trainData.numRows, trainData.numCols);
     printf("\nTest Data: Rows: %d | Cols: %d\n",testData.numRows, testData.numCols);
     printf("\nValidation Data: Rows: %d | Cols: %d\n",valData.numRows, valData.numCols);
 
     // Building the Neural network
+    // network arr (Layer arr) is the model itself
     const int numLayers = 3;
     Layer net[3];
     net[0] = createLayer(trainData.numCols, 64);
@@ -41,61 +43,15 @@ int main(void) {
     // Training the network
     const int numEpochs = 3;
     const float learningRate = 0.01f;
-
     trainNetwork(net, numLayers, numEpochs, &trainData, learningRate);
 
     // Fine tuning on modern plays (2023-2025)
     const int tuneEpochs = 2;
     const float tuneLearningRate = 0.001f;
-
     trainNetwork(net, numLayers, tuneEpochs, &valData, tuneLearningRate);
 
     // Test Model -> Test data loaded and is from 2026 (this curr year)
-    double testErrSqu = 0.0;
-    int correctTestRuns = 0;
-
-    // loop through rows in the test data (how many input cycsles there is)
-    for (int r = 0; r < testData.numRows; r++) {
-        // format the inputs to predict with the model
-        const float *testInputs = &testData.rawPBPData[r * testData.numCols];
-        const float testTarget = testData.rawTargetData[r];
-
-        float prediction = Predict(net, numLayers, testInputs);
-
-        // unNormalize the results
-
-        float unNormalizePrediction = unNormalize(prediction, normFit.targetMean, normFit.targetStdev);
-        float unNormalizeTarget = unNormalize(testTarget, normFit.targetMean, normFit.targetStdev);
-
-        // calculate the difference from the predicrtion
-        float delatTarget = unNormalizePrediction - unNormalizeTarget;
-        testErrSqu += (double)(delatTarget * delatTarget);
-
-
-        // model prediction and target are a floats, need to convery to binary
-        int predictionBinary = 0;
-        if (unNormalizePrediction >= 0.5f) {
-            predictionBinary = 1;
-        }
-        int targetBinary = 0;
-        if (unNormalizeTarget >= 0.5f) {
-            targetBinary = 1;
-        }
-
-        // check if the binary prediction vs target are the same
-        // if so add one to correct test runs to get some accuracy ratings
-        if (predictionBinary == targetBinary) {
-            correctTestRuns++;
-        }
-    }
-
-    // get the MSE for the test runs
-        double testMSE = testErrSqu / (double)testData.numRows;
-
-        // get the test accuracy
-        double testAcc = ((double)correctTestRuns / (double)testData.numRows) * 100.0;
-
-        printf("\n2026 Test | MSE: %.5f | Accuracy: %.2f%%\n", testMSE, testAcc);
+    benchmarkNetwork(net, numLayers, &testData, &normFit);
 
     // Clean
     freeLayer(net, numLayers);
