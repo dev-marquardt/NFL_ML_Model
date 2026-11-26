@@ -169,9 +169,13 @@ void applyNormalization(Dataset *data, NormilizationFit *normFit) {
         }
     }
 
-    for (int r = 0; r < (*data).numCols; r++) {
+    for (int r = 0; r < (*data).numRows; r++) {
         (*data).rawTargetData[r] = zScore((*data).rawTargetData[r], (*normFit).targetMean, (*normFit).targetStdev);
     }
 }
 
+float unNormalize(float z, float mean, float stdev) {
+    float result = (z * stdev) + mean;
 
+    return result;
+}

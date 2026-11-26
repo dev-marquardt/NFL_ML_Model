@@ -31,4 +31,6 @@ NormilizationFit normalizeFit(Dataset *trainingDataset, Dataset *valDataset);
 
 void applyNormalization(Dataset *data, NormilizationFit *normFit);
 
+float unNormalize(float z, float mean, float stdev);
+
 #endif //CFD_ML_RAWDATAINPUT_H

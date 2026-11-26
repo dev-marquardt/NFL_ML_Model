@@ -99,7 +99,7 @@ float Predict(Layer *network, int numLayers, const float *rawInputs) {
 
             // take dot product of weights and inputs (or last layer outputs)
             // Ex: (a,b,c), (d,e,f) -> linear regression equ = (ad + be+ cf) + b
-            // dot procut of vectors = (ad) + (be) + (cf)
+            // dot product of vectors = (ad) + (be) + (cf)
             // they happen to be the same with how this software is structured
             float dotProduct = 0.0;
             for(int j = 0; j < network[l].numInputs; j++) {

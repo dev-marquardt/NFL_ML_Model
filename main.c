@@ -42,13 +42,12 @@ int main(void) {
     const int numEpochs = 3;
     const float learningRate = 0.001f;
 
-    printf("\n\n\n Training Model on Data up to 2023\n\n\n");
+    printf("\n\n\nTraining Model on Data up to 2023\n\n\n");
 
     // each epoch is one full run over the training data
     // increase in epoch -> decrease in learning rate
     for (int epoch = 0; epoch < numEpochs; epoch++) {
         double trainErrSqu = 0.0;
-
 
         // train model on data
         for (int r = 0; r < trainData.numRows; r++) {
@@ -107,18 +106,29 @@ int main(void) {
 
         float prediction = Predict(net, numLayers, testInputs);
 
+        // unNormalize the results
+
+        float unNormalizePrediction = unNormalize(prediction, normFit.targetMean, normFit.targetStdev);
+        float unNormalizeTarget = unNormalize(testTarget, normFit.targetMean, normFit.targetStdev);
+
         // calculate the difference from the predicrtion
-        float diff = prediction - testTarget;
-        testErrSqu += (double)(diff * diff);
+        float delatTarget = unNormalizePrediction - unNormalizeTarget;
+        testErrSqu += (double)(delatTarget * delatTarget);
 
 
-        // model output is a flaot, need to get that into binary which is
-        // what the sucess var is in dataset
-        int predClass = 0;
-        if (prediction >= 0.5f) {
-            predClass = 1;
+        // model prediction and target are a floats, need to convery to binary
+        int predictionBinary = 0;
+        if (unNormalizePrediction >= 0.5f) {
+            predictionBinary = 1;
         }
-        if (predClass == (int)testTarget) {
+        int targetBinary = 0;
+        if (unNormalizeTarget >= 0.5f) {
+            targetBinary = 1;
+        }
+
+        // check if the binary prediction vs target are the same
+        // if so add one to correct test runs to get some accuracy ratings
+        if (predictionBinary == targetBinary) {
             correctTestRuns++;
         }
     }
