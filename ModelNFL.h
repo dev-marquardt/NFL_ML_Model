@@ -5,6 +5,8 @@
 #ifndef CFD_ML_MODELCFD_H
 #define CFD_ML_MODELCFD_H
 
+#include "RawDataInput.h"
+
 typedef struct {
     // params for the model
     int numInputs;
@@ -30,5 +32,8 @@ float Predict(Layer *network, int numLayers, const float *rawInputs);
 
 // Function to train the model
 void trainModel(Layer *network, int numLayers, const float *rawInputs, float target, float learningRate);
+
+// function to train the network
+void trainNetwork(Layer *network, int numLayers, int numEpochs, Dataset *data, float learningRate);
 
 #endif //CFD_ML_MODELCFD_H

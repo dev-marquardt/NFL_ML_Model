@@ -40,59 +40,15 @@ int main(void) {
 
     // Training the network
     const int numEpochs = 3;
-    const float learningRate = 0.001f;
+    const float learningRate = 0.01f;
 
-    printf("\n\n\nTraining Model on Data up to 2023\n\n\n");
-
-    // each epoch is one full run over the training data
-    // increase in epoch -> decrease in learning rate
-    for (int epoch = 0; epoch < numEpochs; epoch++) {
-        double trainErrSqu = 0.0;
-
-        // train model on data
-        for (int r = 0; r < trainData.numRows; r++) {
-            const float *playInputs = &trainData.rawPBPData[r * trainData.numCols];
-            const float target = trainData.rawTargetData[r];
-
-            // function to train the model
-            trainModel(net, numLayers, playInputs, target, learningRate);
-
-            // find diff of output to target
-            float difference = net[numLayers - 1].outputs[0] - target;// takes different from output to actual
-            trainErrSqu += (double)(difference * difference);
-        }
-
-        // calc MSE for the base training cycle
-        double trainMSE = trainErrSqu / (double)trainData.numRows;
-        printf("\nTraining: Epoch: %d | Train MSE: %.5f\n", epoch, trainMSE);
-    }
+    trainNetwork(net, numLayers, numEpochs, &trainData, learningRate);
 
     // Fine tuning on modern plays (2023-2025)
     const int tuneEpochs = 2;
-    const float tuneLearningRate = 0.0002f;
+    const float tuneLearningRate = 0.001f;
 
-    // run on a smaller learning rate (model already learend from hte base training on mass data)
-    for (int i = 0; i < tuneEpochs; i++) {
-        double valErrSqu = 0.0;
-
-        // inject the tuning data
-        for (int r = 0; r < valData.numRows; r++) {
-            const float *playInputs = &valData.rawPBPData[r * valData.numCols];
-            const float target = valData.rawTargetData[r];
-
-            // train model on tuning data -> Should be able to push data from
-            // 2022 NFL closer to 2025/2026 style of play
-            trainModel(net, numLayers, playInputs, target, tuneLearningRate);
-
-            // find diff of output to target
-            float diff = net[numLayers - 1].outputs[0] - target;
-            valErrSqu += (double)(diff * diff);
-        }
-
-        // calc MSE for the validation training cycle
-        double valMSE = valErrSqu / (double)valData.numRows;
-        printf("\nFine-Tune: Epoch: %d | Train MSE: %.5f\n", i, valMSE);
-    }
+    trainNetwork(net, numLayers, tuneEpochs, &valData, tuneLearningRate);
 
     // Test Model -> Test data loaded and is from 2026 (this curr year)
     double testErrSqu = 0.0;

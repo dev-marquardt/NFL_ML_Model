@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <stdio.h>
 
 // Set up create layer function that will generate the Struct for layers
 // key idea in ML model is layers and how the numbers are passed from layer to layer
@@ -197,5 +198,35 @@ void trainModel(Layer *network, int numLayers, const float *rawInputs, float tar
             // bias is just a weight with const input of 1.0 -> delta * 1.0
             network[l].biases[i] -= learningRate * network[l].deltas[i];
         }
+    }
+}
+
+// impliemnts the Training Network features.
+// This will impliment ideas from the training layer but apply it
+// to the network to get a trained model (this is for modularation)
+void trainNetwork(Layer *network, int numLayers, int numEpochs, Dataset *data, const float learningRate) {
+    // loop to control the epoch loop -> 3 epochs = 3 training loops
+    for (int epoch = 0; epoch < numEpochs; epoch++) {
+        // Variable to hold the Error Squared
+        // used to track error throughout model and training usage
+        double trainErrSqu = 0.0;
+
+        // train model on data
+        for (int r = 0; r < (*data).numRows; r++) {
+            const float *playInputs = &(*data).rawPBPData[r * (*data).numCols];
+            const float target = (*data).rawTargetData[r];
+
+            // function to train the model
+            trainModel(network, numLayers, playInputs, target, learningRate);
+
+            // find diff of output to target
+            float difference = network[numLayers - 1].outputs[0] - target;// takes different from output to actual
+            trainErrSqu += (double)(difference * difference);
+        }
+
+        // calc MSE for the base training cycle
+        double trainMSE = trainErrSqu / (double) (*data).numRows;
+
+        printf("\nEpoch: %d | Train MSE: %.5f\n", epoch, trainMSE);
     }
 }
